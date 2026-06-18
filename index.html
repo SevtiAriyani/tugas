@@ -2,10 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <!-- Pastikan user-scalable=yes -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>TaskFlow - Manajemen Tugas</title>
-    <meta name="description" content="Aplikasi TaskFlow untuk mengelola tugas prioritas dan produktivitas harian.">
+    <meta name="description" content="Aplikasi TaskFlow untuk mengelola tugas prioritas dan produktivitas harian dengan aksesibilitas penuh.">
     <style>
         /* --- CSS VARIABLES & RESET --- */
         :root {
@@ -14,9 +13,11 @@
             --bg-color: #f8fafc;
             --surface-color: #ffffff;
             --text-main: #1e293b;
-            /* Kontras ditingkatkan lagi sedikit agar aman untuk semua font size */
             --text-secondary: #334155; 
             --danger-color: #ef4444;
+            /* Warna merah lebih gelap untuk kontras hover yang aman */
+            --danger-dark: #991b1b; 
+            --danger-bg: #fef2f2;
             --success-color: #10b981;
             --header-height: 60px;
             --bottom-nav-height: 65px;
@@ -46,7 +47,6 @@
         /* --- UTILITIES --- */
         .hidden { display: none !important; }
         
-        /* Skip Link Style */
         .skip-link {
             position: absolute;
             top: -40px;
@@ -105,15 +105,13 @@
             gap: 12px;
         }
 
-        /* PERBAIKAN 1: Menggunakan H1 agar struktur heading valid (H1 -> H2) */
         .app-title {
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary-color);
-            margin: 0; /* Reset margin H1 */
+            margin: 0;
         }
 
-        /* Top Apps Submenu */
         .top-apps-menu {
             position: absolute;
             top: var(--header-height);
@@ -129,7 +127,6 @@
             border-bottom: 1px solid #e2e8f0;
         }
         
-        /* Saat menu aktif, pastikan terlihat oleh screen reader */
         .top-apps-menu.active {
             transform: scaleY(1);
         }
@@ -149,7 +146,6 @@
             font-size: 0.75rem;
             color: var(--text-secondary);
             text-decoration: none;
-            /* Pastikan link bisa di-klik dengan aman */
             padding: 8px;
             border-radius: 8px;
         }
@@ -224,14 +220,13 @@
             font-weight: bold;
         }
 
-        /* Focus Styles yang Jelas */
         .tab-btn:focus-visible, .btn-icon:focus-visible, .nav-item:focus-visible, button:focus-visible {
             outline: 2px solid var(--primary-color);
             outline-offset: 2px;
             border-radius: 4px;
         }
 
-        /* --- CARDS --- */
+        /* --- CARDS (UL/LI Structure for Accessibility) --- */
         .section-title {
             font-size: 1rem;
             font-weight: 600;
@@ -239,7 +234,7 @@
             color: var(--text-main);
         }
 
-        /* PERBAIKAN 2: Role list agar dikenali sebagai list items */
+        /* PERBAIKAN 1: Menggunakan <ul> native */
         .moveover-container {
             display: flex;
             gap: 16px;
@@ -247,6 +242,8 @@
             padding: 4px 4px 20px 4px;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
+            list-style: none; /* Hilangkan bullet points */
+            margin: 0;
         }
         .moveover-container::-webkit-scrollbar { display: none; }
 
@@ -262,8 +259,6 @@
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
             overflow: hidden;
-            /* Hapus tabindex="0" karena tidak ada aksi spesifik pada seluruh card, 
-               hanya tombol delete. */
         }
 
         .card-header {
@@ -307,11 +302,22 @@
             border-radius: 50%;
             color: var(--text-secondary);
             transition: background 0.2s;
+            background-color: white; /* Pastikan background jelas */
         }
         
         .btn-icon:hover { background-color: #f1f5f9; }
-        .btn-icon.delete { color: var(--danger-color); }
-        .btn-icon.delete:hover { background-color: #fee2e2; }
+        
+        /* PERBAIKAN 2: Kontras Warna Tombol Hapus */
+        .btn-icon.delete { 
+            color: var(--danger-color); 
+        }
+        
+        /* Hover state yang aman secara kontras */
+        .btn-icon.delete:hover { 
+            background-color: var(--danger-bg); 
+            color: var(--danger-dark); /* Gunakan warna lebih gelap agar kontras */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
 
         /* --- BOTTOM MENU --- */
         .bottom-menu {
@@ -455,7 +461,7 @@
 </head>
 <body>
 
-    <!-- Skip Link untuk Navigasi Keyboard -->
+    <!-- Skip Link -->
     <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
     <!-- HEADER -->
@@ -464,7 +470,6 @@
             <button class="btn-icon" id="burgerBtn" aria-label="Buka menu navigasi samping" aria-controls="drawer" aria-expanded="false">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <!-- PERBAIKAN 1: Span diubah menjadi H1 -->
             <h1 class="app-title">TaskFlow</h1>
         </div>
         
@@ -479,25 +484,20 @@
     </header>
 
     <!-- TOP APPS SUBMENU -->
-    <!-- Menambahkan aria-hidden dinamis via JS -->
     <nav class="top-apps-menu" id="topAppsMenu" aria-label="Menu Aplikasi Cepat" aria-hidden="true">
         <div class="apps-grid">
-            <!-- Aplikasi 1 -->
             <a href="#" class="app-item" tabindex="-1" onclick="event.preventDefault()">
                 <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
                 <span>File</span>
             </a>
-            <!-- Aplikasi 2 -->
             <a href="#" class="app-item" tabindex="-1" onclick="event.preventDefault()">
                 <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
                 <span>Waktu</span>
             </a>
-            <!-- Aplikasi 3 -->
             <a href="#" class="app-item" tabindex="-1" onclick="event.preventDefault()">
                 <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
                 <span>Chat</span>
             </a>
-            <!-- Aplikasi 4 -->
             <a href="#" class="app-item" tabindex="-1" onclick="event.preventDefault()">
                 <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
                 <span>Jadwal</span>
@@ -509,7 +509,6 @@
     <main id="mainContent">
         
         <!-- TABS BAR -->
-        <!-- PERBAIKAN 2: Menghapus aria-controls karena panel referensi tidak ada -->
         <nav class="tabs-container" role="tablist" aria-label="Kategori Tugas">
             <button class="tab-btn active" role="tab" aria-selected="true" id="tab-1">Semua</button>
             <button class="tab-btn" role="tab" aria-selected="false" id="tab-2">Desain</button>
@@ -521,64 +520,70 @@
         <!-- SECTION: CARDS -->
         <h2 class="section-title">Tugas Prioritas (Geser)</h2>
         
-        <!-- PERBAIKAN 2: Role="list" dan aria-label -->
-        <section class="moveover-container" id="cardContainer" role="list" aria-label="Daftar Tugas Prioritas">
+        <!-- PERBAIKAN 1: Menggunakan <ul> dan <li> Native -->
+        <ul class="moveover-container" id="cardContainer" aria-label="Daftar Tugas Prioritas">
             
-            <!-- Card 1 - Role="listitem" -->
-            <article class="card" id="card-1" role="listitem">
-                <div class="card-header">
-                    <span class="card-tag">Desain UI</span>
-                    <div class="card-actions">
-                        <button class="btn-icon delete" onclick="handleDelete('card-1')" aria-label="Hapus tugas Revisi Wireframe">
-                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+            <!-- Item 1 -->
+            <li>
+                <article class="card" id="card-1">
+                    <div class="card-header">
+                        <span class="card-tag">Desain UI</span>
+                        <div class="card-actions">
+                            <button class="btn-icon delete" onclick="handleDelete('card-1')" aria-label="Hapus tugas Revisi Wireframe">
+                                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <h3 class="card-title">Revisi Wireframe</h3>
-                <p class="card-desc">Perbarui flow navigasi untuk drawer dan pastikan kontras warna sesuai standar aksesibilitas.</p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
-                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Due: 2 Jam
-                </div>
-            </article>
-
-            <!-- Card 2 -->
-            <article class="card" id="card-2" role="listitem">
-                <div class="card-header">
-                    <span class="card-tag">Frontend</span>
-                    <div class="card-actions">
-                        <button class="btn-icon delete" onclick="handleDelete('card-2')" aria-label="Hapus tugas Integrasi Animasi">
-                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+                    <h3 class="card-title">Revisi Wireframe</h3>
+                    <p class="card-desc">Perbarui flow navigasi untuk drawer dan pastikan kontras warna sesuai standar aksesibilitas.</p>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                        <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Due: 2 Jam
                     </div>
-                </div>
-                <h3 class="card-title">Integrasi Animasi</h3>
-                <p class="card-desc">Implementasikan animasi loading dan transisi halaman untuk pengalaman pengguna yang lebih mulus.</p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
-                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Due: Besok
-                </div>
-            </article>
+                </article>
+            </li>
 
-            <!-- Card 3 -->
-            <article class="card" id="card-3" role="listitem">
-                <div class="card-header">
-                    <span class="card-tag">Pengujian</span>
-                    <div class="card-actions">
-                        <button class="btn-icon delete" onclick="handleDelete('card-3')" aria-label="Hapus tugas Audit Lighthouse">
-                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+            <!-- Item 2 -->
+            <li>
+                <article class="card" id="card-2">
+                    <div class="card-header">
+                        <span class="card-tag">Frontend</span>
+                        <div class="card-actions">
+                            <button class="btn-icon delete" onclick="handleDelete('card-2')" aria-label="Hapus tugas Integrasi Animasi">
+                                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <h3 class="card-title">Audit Lighthouse</h3>
-                <p class="card-desc">Pastikan skor Lighthouse di atas 90 untuk kategori Performance, Accessibility, dan Best Practices.</p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
-                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Due: 3 Hari
-                </div>
-            </article>
+                    <h3 class="card-title">Integrasi Animasi</h3>
+                    <p class="card-desc">Implementasikan animasi loading dan transisi halaman untuk pengalaman pengguna yang lebih mulus.</p>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                        <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Due: Besok
+                    </div>
+                </article>
+            </li>
 
-        </section>
+            <!-- Item 3 -->
+            <li>
+                <article class="card" id="card-3">
+                    <div class="card-header">
+                        <span class="card-tag">Pengujian</span>
+                        <div class="card-actions">
+                            <button class="btn-icon delete" onclick="handleDelete('card-3')" aria-label="Hapus tugas Audit Lighthouse">
+                                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="card-title">Audit Lighthouse</h3>
+                    <p class="card-desc">Pastikan skor Lighthouse di atas 90 untuk kategori Performance, Accessibility, dan Best Practices.</p>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                        <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Due: 3 Hari
+                    </div>
+                </article>
+            </li>
+
+        </ul>
 
         <br>
         <h2 class="section-title">Statistik Cepat</h2>
@@ -669,9 +674,8 @@
             drawer.classList.add('open');
             drawer.setAttribute('aria-hidden', 'false');
             burgerBtn.setAttribute('aria-expanded', 'true');
-            drawerOverlay.style.pointerEvents = 'auto'; // Klik overlay menutup drawer
+            drawerOverlay.style.pointerEvents = 'auto'; 
             
-            // Fokus ke tombol close di drawer
             setTimeout(() => {
                 const closeBtn = drawer.querySelector('.drawer-header button');
                 if(closeBtn) closeBtn.focus();
@@ -690,7 +694,6 @@
             document.removeEventListener('keydown', handleDrawerKeydown);
         }
 
-        // Focus Trap Logic
         function handleDrawerKeydown(e) {
             if (e.key === 'Escape') {
                 closeDrawer();
@@ -701,12 +704,12 @@
                 const firstElement = focusableElements[0];
                 const lastElement = focusableElements[focusableElements.length - 1];
 
-                if (e.shiftKey) { /* shift + tab */
+                if (e.shiftKey) { 
                     if (document.activeElement === firstElement) {
                         lastElement.focus();
                         e.preventDefault();
                     }
-                } else { /* tab */
+                } else { 
                     if (document.activeElement === lastElement) {
                         firstElement.focus();
                         e.preventDefault();
@@ -730,11 +733,9 @@
             
             if(!isExpanded) {
                 topAppsMenu.setAttribute('aria-hidden', 'false');
-                // Enable tabindex links
                 appLinks.forEach(link => link.removeAttribute('tabindex'));
             } else {
                 topAppsMenu.setAttribute('aria-hidden', 'true');
-                // Disable tabindex links saat menu tertutup agar tidak ke-tab
                 appLinks.forEach(link => link.setAttribute('tabindex', '-1'));
             }
         });
