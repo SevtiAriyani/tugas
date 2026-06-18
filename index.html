@@ -15,8 +15,7 @@
             --text-main: #1e293b;
             --text-secondary: #334155; 
             --danger-color: #ef4444;
-            /* Warna merah lebih gelap untuk kontras hover yang aman */
-            --danger-dark: #991b1b; 
+            --danger-dark: #991b1b;
             --danger-bg: #fef2f2;
             --success-color: #10b981;
             --header-height: 60px;
@@ -24,6 +23,8 @@
             --border-radius: 12px;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            /* Shadow untuk efek hover yang lebih dalam */
+            --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
             --transition-speed: 0.3s;
         }
 
@@ -72,6 +73,8 @@
             stroke-width: 2; 
             stroke-linecap: round; 
             stroke-linejoin: round; 
+            /* Transisi untuk ikon agar animasi hover halus */
+            transition: transform 0.2s ease;
         }
         
         button { 
@@ -148,11 +151,16 @@
             text-decoration: none;
             padding: 8px;
             border-radius: 8px;
+            transition: all 0.2s ease;
         }
         
-        .app-item:focus {
-            outline: 2px solid var(--primary-color);
+        /* Animasi Hover untuk Top Apps */
+        .app-item:hover {
             background-color: var(--primary-light);
+            color: var(--primary-color);
+        }
+        .app-item:hover .app-icon-wrapper {
+            transform: scale(1.1);
         }
 
         .app-icon-wrapper {
@@ -164,6 +172,7 @@
             align-items: center;
             justify-content: center;
             color: var(--primary-color);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* --- MAIN CONTENT AREA --- */
@@ -206,11 +215,12 @@
             font-size: 0.9rem;
             white-space: nowrap;
             border: 2px solid transparent;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .tab-btn:hover {
             background-color: #f1f5f9;
+            transform: translateY(-1px);
         }
 
         .tab-btn[aria-selected="true"] {
@@ -226,7 +236,7 @@
             border-radius: 4px;
         }
 
-        /* --- CARDS (UL/LI Structure for Accessibility) --- */
+        /* --- CARDS (UL/LI Structure) --- */
         .section-title {
             font-size: 1rem;
             font-weight: 600;
@@ -234,7 +244,6 @@
             color: var(--text-main);
         }
 
-        /* PERBAIKAN 1: Menggunakan <ul> native */
         .moveover-container {
             display: flex;
             gap: 16px;
@@ -242,7 +251,7 @@
             padding: 4px 4px 20px 4px;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
-            list-style: none; /* Hilangkan bullet points */
+            list-style: none;
             margin: 0;
         }
         .moveover-container::-webkit-scrollbar { display: none; }
@@ -256,9 +265,20 @@
             box-shadow: var(--shadow-sm);
             scroll-snap-align: center;
             border: 1px solid #f1f5f9;
-            transition: transform 0.2s, box-shadow 0.2s;
+            /* Transisi kompleks untuk efek hover yang halus */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        box-shadow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                        border-color 0.3s ease;
             position: relative;
             overflow: hidden;
+            cursor: default; /* Tetap default karena card tidak diklik sebagai keseluruhan */
+        }
+
+        /* ANIMASI HOVER CARD */
+        .card:hover {
+            transform: translateY(-8px); /* Kartu naik ke atas */
+            box-shadow: var(--shadow-hover); /* Bayangan membesar */
+            border-color: #cbd5e1; /* Border sedikit lebih gelap */
         }
 
         .card-header {
@@ -301,22 +321,24 @@
             padding: 8px;
             border-radius: 50%;
             color: var(--text-secondary);
-            transition: background 0.2s;
-            background-color: white; /* Pastikan background jelas */
+            transition: background 0.2s, transform 0.2s;
+            background-color: white;
         }
         
-        .btn-icon:hover { background-color: #f1f5f9; }
+        /* HOVER BTN ICON UMUM */
+        .btn-icon:hover { 
+            background-color: #f1f5f9; 
+            transform: scale(1.1); 
+        }
         
-        /* PERBAIKAN 2: Kontras Warna Tombol Hapus */
         .btn-icon.delete { 
             color: var(--danger-color); 
         }
         
-        /* Hover state yang aman secara kontras */
         .btn-icon.delete:hover { 
             background-color: var(--danger-bg); 
-            color: var(--danger-dark); /* Gunakan warna lebih gelap agar kontras */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            color: var(--danger-dark);
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
         }
 
         /* --- BOTTOM MENU --- */
@@ -343,12 +365,37 @@
             font-size: 0.7rem;
             padding: 8px 16px;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 12px; /* Lebih bulat untuk background hover */
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* ANIMASI HOVER BOTTOM NAV */
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .nav-item:hover svg {
+            transform: scale(1.2); /* Ikon membesar saat hover */
+            stroke: var(--primary-color);
         }
 
         .nav-item.active {
             color: var(--primary-color);
             font-weight: 600;
+        }
+        
+        /* Indikator aktif (titik kecil di bawah) */
+        .nav-item.active::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 4px;
         }
 
         /* --- DRAWER --- */
@@ -413,11 +460,20 @@
             color: var(--text-main);
             text-decoration: none;
             font-size: 1rem;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent; /* Border kiri transparan untuk efek */
         }
 
+        /* ANIMASI HOVER DRAWER LINK */
         .drawer-link:hover {
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
+            color: var(--primary-color);
+            padding-left: 24px; /* Efek geser ke kanan */
+            border-left-color: var(--primary-color); /* Border kiri menyala */
+        }
+        
+        .drawer-link:hover svg {
+            transform: translateX(4px); /* Ikon juga ikut geser */
         }
 
         /* --- TOAST --- */
@@ -456,6 +512,11 @@
             min-width: auto;
             min-height: auto;
             padding: 0;
+        }
+        
+        .btn-undo:hover {
+            color: #34d399; /* Hijau lebih terang saat hover */
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -520,7 +581,6 @@
         <!-- SECTION: CARDS -->
         <h2 class="section-title">Tugas Prioritas (Geser)</h2>
         
-        <!-- PERBAIKAN 1: Menggunakan <ul> dan <li> Native -->
         <ul class="moveover-container" id="cardContainer" aria-label="Daftar Tugas Prioritas">
             
             <!-- Item 1 -->
