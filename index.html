@@ -2,9 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobile UX Task App</title>
-    <meta name="description" content="Aplikasi Mobile UX dengan Drawer, Tabs, Bottom Nav, dan Card Interaktif">
+    <!-- PERUBAHAN 1: Izinkan user-scalable untuk aksesibilitas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Mobile UX Task App - Aksesible</title>
+    <meta name="description" content="Aplikasi Mobile Task Management dengan aksesibilitas penuh.">
     <style>
         /* --- CSS VARIABLES & RESET --- */
         :root {
@@ -13,7 +14,8 @@
             --bg-color: #f8fafc;
             --surface-color: #ffffff;
             --text-main: #1e293b;
-            --text-secondary: #64748b;
+            /* PERUBAHAN 2: Meningkatkan kontras teks sekunders (dari #64748b ke #475569) */
+            --text-secondary: #475569; 
             --danger-color: #ef4444;
             --success-color: #10b981;
             --header-height: 60px;
@@ -38,13 +40,49 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Mencegah scroll body, scroll di dalam main saja */
+            overflow: hidden;
         }
 
         /* --- UTILITIES --- */
         .hidden { display: none !important; }
-        .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        button { cursor: pointer; border: none; background: none; font-family: inherit; }
+        
+        /* PERUBAHAN 3: Style untuk Skip Link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary-color);
+            color: white;
+            padding: 8px;
+            z-index: 1000;
+            transition: top 0.2s;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 8px 16px;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        .icon { 
+            width: 24px; 
+            height: 24px; 
+            fill: none; 
+            stroke: currentColor; 
+            stroke-width: 2; 
+            stroke-linecap: round; 
+            stroke-linejoin: round; 
+        }
+        
+        button { 
+            cursor: pointer; 
+            border: none; 
+            background: none; 
+            font-family: inherit; 
+            /* Memastikan tombol memiliki ukuran klik minimal */
+            min-width: 44px;
+            min-height: 44px;
+        }
 
         /* --- HEADER & TOP APPS MENU --- */
         header {
@@ -105,6 +143,7 @@
             gap: 4px;
             font-size: 0.75rem;
             color: var(--text-secondary);
+            text-decoration: none;
         }
 
         .app-icon-wrapper {
@@ -138,7 +177,7 @@
             100% { opacity: 1; }
         }
 
-        /* --- TABS BAR --- */
+        /* --- TABS BAR (Accessible ARIA Pattern) --- */
         .tabs-container {
             display: flex;
             gap: 12px;
@@ -151,6 +190,7 @@
         }
         .tabs-container::-webkit-scrollbar { display: none; }
 
+        /* Tab Styling */
         .tab-btn {
             padding: 8px 16px;
             border-radius: 20px;
@@ -159,14 +199,28 @@
             font-weight: 600;
             font-size: 0.9rem;
             white-space: nowrap;
-            border: 1px solid #e2e8f0;
+            border: 2px solid transparent; /* Border transparan untuk layout stabil */
             transition: all 0.2s;
+            outline: none; /* Kita handle outline sendiri */
         }
 
-        .tab-btn.active {
+        .tab-btn:hover {
+            background-color: #f1f5f9;
+        }
+
+        .tab-btn[aria-selected="true"] {
             background-color: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        /* Focus style khusus tab agar terlihat jelas */
+        .tab-btn:focus-visible {
+            border-color: var(--primary-color);
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-color);
         }
 
         /* --- CARDS & MOVEOVER ANIMATION --- */
@@ -182,14 +236,14 @@
             display: flex;
             gap: 16px;
             overflow-x: auto;
-            padding: 4px 4px 20px 4px; /* Bottom padding for shadow */
+            padding: 4px 4px 20px 4px;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
         }
         .moveover-container::-webkit-scrollbar { display: none; }
 
         .card {
-            flex: 0 0 85%; /* Lebar card untuk memicu scroll */
+            flex: 0 0 85%;
             max-width: 320px;
             background: var(--surface-color);
             border-radius: var(--border-radius);
@@ -246,7 +300,18 @@
             border-radius: 50%;
             color: var(--text-secondary);
             transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        
+        /* Focus visible global override */
+        .btn-icon:focus-visible, .nav-item:focus-visible, button:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
         .btn-icon:hover { background-color: #f1f5f9; }
         .btn-icon.delete { color: var(--danger-color); }
         .btn-icon.delete:hover { background-color: #fee2e2; }
@@ -274,10 +339,13 @@
             color: var(--text-secondary);
             font-size: 0.7rem;
             padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 8px;
         }
 
         .nav-item.active {
             color: var(--primary-color);
+            font-weight: 600;
         }
 
         /* --- BURGER MENU (DRAWER) --- */
@@ -349,7 +417,7 @@
             background-color: #f1f5f9;
         }
 
-        /* --- UNDO TOAST (No Native Alert) --- */
+        /* --- UNDO TOAST (Accessible Live Region) --- */
         .undo-toast {
             position: fixed;
             bottom: calc(var(--bottom-nav-height) + 16px);
@@ -378,56 +446,62 @@
             color: var(--success-color);
             font-weight: 700;
             font-size: 0.9rem;
-        }
-
-        /* --- ACCESSIBILITY FOCUS --- */
-        *:focus-visible {
-            outline: 2px solid var(--primary-color);
-            outline-offset: 2px;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            cursor: pointer;
+            min-width: auto;
+            min-height: auto;
+            padding: 0;
         }
     </style>
 </head>
 <body>
 
+    <!-- PERUBAHAN 4: Skip Link untuk Keyboard Navigation -->
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
+
     <!-- HEADER -->
     <header>
         <div class="header-left">
-            <!-- Burger Menu Trigger -->
-            <button class="btn-icon" id="burgerBtn" aria-label="Buka Menu">
-                <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <!-- PERUBAHAN 5: Aria-expanded, aria-controls, dan aria-label yang jelas -->
+            <button class="btn-icon" id="burgerBtn" aria-label="Buka menu navigasi samping" aria-controls="drawer" aria-expanded="false">
+                <!-- Icon dekoratif diberi aria-hidden -->
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
             <span class="app-title">TaskFlow</span>
         </div>
         
         <div class="header-right">
             <!-- Top Apps Trigger -->
-            <button class="btn-icon" id="appsMenuBtn" aria-label="Menu Aplikasi">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <button class="btn-icon" id="appsMenuBtn" aria-label="Menu aplikasi cepat" aria-controls="topAppsMenu" aria-expanded="false" aria-haspopup="true">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             </button>
             <!-- Refresh Action -->
-            <button class="btn-icon" id="refreshBtn" aria-label="Refresh Halaman">
-                <svg class="icon" id="refreshIcon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <button class="btn-icon" id="refreshBtn" aria-label="Muat ulang halaman">
+                <svg class="icon" id="refreshIcon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
         </div>
     </header>
 
     <!-- TOP APPS SUBMENU -->
-    <nav class="top-apps-menu" id="topAppsMenu" aria-label="Menu Aplikasi Cepat">
+    <!-- PERUBAHAN 6: Menambahkan aria-hidden saat tertutup -->
+    <nav class="top-apps-menu" id="topAppsMenu" aria-label="Menu Aplikasi Cepat" aria-hidden="true">
         <div class="apps-grid">
             <a href="#" class="app-item" onclick="event.preventDefault()">
-                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
+                <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
                 <span>File</span>
             </a>
             <a href="#" class="app-item" onclick="event.preventDefault()">
-                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
                 <span>Waktu</span>
             </a>
             <a href="#" class="app-item" onclick="event.preventDefault()">
-                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+                <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
                 <span>Chat</span>
             </a>
             <a href="#" class="app-item" onclick="event.preventDefault()">
-                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                <div class="app-icon-wrapper" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
                 <span>Jadwal</span>
             </a>
         </div>
@@ -436,71 +510,70 @@
     <!-- MAIN CONTENT -->
     <main id="mainContent">
         
-        <!-- TABS BAR -->
-        <nav class="tabs-container" aria-label="Kategori Tugas">
-            <button class="tab-btn active">Semua</button>
-            <button class="tab-btn">Desain</button>
-            <button class="tab-btn">Pengembangan</button>
-            <button class="tab-btn">Pemasaran</button>
-            <button class="tab-btn">Pribadi</button>
+        <!-- PERUBAHAN 7: Struktur Tabs ARIA yang benar (Tablist, Tab, aria-selected) -->
+        <nav class="tabs-container" role="tablist" aria-label="Kategori Tugas">
+            <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-1" id="tab-1">Semua</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-2" id="tab-2">Desain</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-3" id="tab-3">Pengembangan</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-4" id="tab-4">Pemasaran</button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-5" id="tab-5">Pribadi</button>
         </nav>
 
         <!-- SECTION: CARDS (Horizontal Moveover) -->
         <h2 class="section-title">Tugas Prioritas (Geser)</h2>
         
-        <!-- Container ini menggunakan scroll-snap untuk animasi moveover yang halus -->
-        <section class="moveover-container" id="cardContainer">
+        <section class="moveover-container" id="cardContainer" aria-label="Daftar Tugas Prioritas">
             
             <!-- Card 1 -->
-            <article class="card" id="card-1">
+            <article class="card" id="card-1" tabindex="0">
                 <div class="card-header">
                     <span class="card-tag">Desain UI</span>
                     <div class="card-actions">
-                        <button class="btn-icon delete" onclick="handleDelete('card-1')" aria-label="Hapus Tugas">
-                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <button class="btn-icon delete" onclick="handleDelete('card-1')" aria-label="Hapus tugas Revisi Wireframe">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </div>
                 </div>
                 <h3 class="card-title">Revisi Wireframe</h3>
                 <p class="card-desc">Perbarui flow navigasi untuk drawer dan pastikan kontras warna sesuai standar aksesibilitas.</p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#64748b;">
-                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     Due: 2 Jam
                 </div>
             </article>
 
             <!-- Card 2 -->
-            <article class="card" id="card-2">
+            <article class="card" id="card-2" tabindex="0">
                 <div class="card-header">
                     <span class="card-tag">Frontend</span>
                     <div class="card-actions">
-                        <button class="btn-icon delete" onclick="handleDelete('card-2')" aria-label="Hapus Tugas">
-                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <button class="btn-icon delete" onclick="handleDelete('card-2')" aria-label="Hapus tugas Integrasi Animasi">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </div>
                 </div>
                 <h3 class="card-title">Integrasi Animasi</h3>
                 <p class="card-desc">Implementasikan animasi loading dan transisi halaman untuk pengalaman pengguna yang lebih mulus.</p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#64748b;">
-                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     Due: Besok
                 </div>
             </article>
 
             <!-- Card 3 -->
-            <article class="card" id="card-3">
+            <article class="card" id="card-3" tabindex="0">
                 <div class="card-header">
                     <span class="card-tag">Pengujian</span>
                     <div class="card-actions">
-                        <button class="btn-icon delete" onclick="handleDelete('card-3')" aria-label="Hapus Tugas">
-                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <button class="btn-icon delete" onclick="handleDelete('card-3')" aria-label="Hapus tugas Audit Lighthouse">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </div>
                 </div>
                 <h3 class="card-title">Audit Lighthouse</h3>
                 <p class="card-desc">Pastikan skor Lighthouse di atas 90 untuk kategori Performance, Accessibility, dan Best Practices.</p>
-                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#64748b;">
-                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     Due: 3 Hari
                 </div>
             </article>
@@ -524,67 +597,101 @@
 
     <!-- BOTTOM MENU -->
     <nav class="bottom-menu" aria-label="Navigasi Utama">
-        <a href="#" class="nav-item active">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <a href="#" class="nav-item active" aria-current="page">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             <span>Beranda</span>
         </a>
         <a href="#" class="nav-item">
-            <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <span>Cari</span>
         </a>
         <a href="#" class="nav-item">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             <span>Favorit</span>
         </a>
         <a href="#" class="nav-item">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             <span>Profil</span>
         </a>
     </nav>
 
     <!-- BURGER DRAWER -->
-    <aside class="drawer" id="drawer" aria-label="Menu Samping">
+    <!-- PERUBAHAN 8: Modal aria attributes -->
+    <aside class="drawer" id="drawer" aria-label="Menu Navigasi Samping" aria-hidden="true">
         <div class="drawer-header">
             TaskFlow
-            <button onclick="toggleDrawer()" style="margin-left:auto; color:inherit;">
-                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button onclick="toggleDrawer()" style="margin-left:auto; color:inherit;" aria-label="Tutup menu navigasi">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
         <nav class="drawer-nav">
             <a href="#" class="drawer-link">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Dashboard
             </a>
             <a href="#" class="drawer-link">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 Laporan
             </a>
             <a href="#" class="drawer-link">
-                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 Pengaturan
             </a>
         </nav>
     </aside>
-    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()" aria-hidden="true"></div>
 
-    <!-- UNDO TOAST (Pengganti Konfirmasi Delete) -->
-    <div class="undo-toast" id="undoToast">
+    <!-- UNDO TOAST (Accessible Live Region) -->
+    <!-- PERUBAHAN 9: Role status dan aria-live agar screen reader membacanya -->
+    <div class="undo-toast" id="undoToast" role="status" aria-live="polite">
         <span style="font-size:0.9rem;">Item berhasil dihapus</span>
         <button class="btn-undo" onclick="handleUndo()">BATALKAN</button>
     </div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- 1. BURGER MENU (DRAWER) ---
+        // --- 1. BURGER MENU (DRAWER) dengan Fokus Management ---
         const drawer = document.getElementById('drawer');
         const burgerBtn = document.getElementById('burgerBtn');
         const drawerOverlay = document.getElementById('drawerOverlay');
+        let lastFocusedElement;
 
         function toggleDrawer() {
-            drawer.classList.toggle('open');
-            // Aksesibilitas: Update aria attribute pada tombol burger
             const isOpen = drawer.classList.contains('open');
-            burgerBtn.setAttribute('aria-expanded', isOpen);
+            
+            if (isOpen) {
+                // Tutup Drawer
+                drawer.classList.remove('open');
+                drawer.setAttribute('aria-hidden', 'true');
+                burgerBtn.setAttribute('aria-expanded', 'false');
+                
+                // Kembalikan fokus ke tombol burger
+                if (lastFocusedElement) lastFocusedElement.focus();
+                
+                // Hapus listener escape
+                document.removeEventListener('keydown', handleDrawerEscape);
+            } else {
+                // Buka Drawer
+                lastFocusedElement = document.activeElement;
+                drawer.classList.add('open');
+                drawer.setAttribute('aria-hidden', 'false');
+                burgerBtn.setAttribute('aria-expanded', 'true');
+                
+                // Pindahkan fokus ke tombol tutup di dalam drawer
+                setTimeout(() => {
+                    const closeBtn = drawer.querySelector('button');
+                    if(closeBtn) closeBtn.focus();
+                }, 100);
+
+                // Tambah listener escape
+                document.addEventListener('keydown', handleDrawerEscape);
+            }
+        }
+
+        function handleDrawerEscape(e) {
+            if (e.key === 'Escape' && drawer.classList.contains('open')) {
+                toggleDrawer();
+            }
         }
 
         burgerBtn.addEventListener('click', toggleDrawer);
@@ -594,30 +701,63 @@
         const topAppsMenu = document.getElementById('topAppsMenu');
 
         appsMenuBtn.addEventListener('click', () => {
+            const isExpanded = appsMenuBtn.getAttribute('aria-expanded') === 'true';
+            
             topAppsMenu.classList.toggle('active');
-        });
-
-        // Tutup menu jika klik di luar area menu
-        document.addEventListener('click', (e) => {
-            if (!appsMenuBtn.contains(e.target) && !topAppsMenu.contains(e.target)) {
-                topAppsMenu.classList.remove('active');
+            appsMenuBtn.setAttribute('aria-expanded', !isExpanded);
+            
+            if(!isExpanded) {
+                topAppsMenu.setAttribute('aria-hidden', 'false');
+            } else {
+                topAppsMenu.setAttribute('aria-hidden', 'true');
             }
         });
 
-        // --- 3. TABS BAR ---
+        document.addEventListener('click', (e) => {
+            if (!appsMenuBtn.contains(e.target) && !topAppsMenu.contains(e.target)) {
+                topAppsMenu.classList.remove('active');
+                appsMenuBtn.setAttribute('aria-expanded', 'false');
+                topAppsMenu.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        // --- 3. TABS BAR (Keyboard & ARIA Logic) ---
         const tabBtns = document.querySelectorAll('.tab-btn');
+        
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Hapus kelas active dari semua tombol
-                tabBtns.forEach(b => b.classList.remove('active'));
-                // Tambahkan kelas active ke tombol yang diklik
+                // Update UI
+                tabBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-selected', 'false');
+                    b.setAttribute('tabindex', '-1');
+                });
                 btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+                btn.setAttribute('tabindex', '0');
                 
-                // (Opsional) Logika filter konten bisa ditambahkan di sini
-                // Simulasi feedback visual
+                // Simulasi filter
                 const container = document.querySelector('.moveover-container');
                 container.style.opacity = '0.5';
                 setTimeout(() => container.style.opacity = '1', 200);
+            });
+
+            // Keyboard navigation for tabs (Arrow Left/Right)
+            btn.addEventListener('keydown', (e) => {
+                let index = [...tabBtns].indexOf(btn);
+                let nextIndex;
+
+                if (e.key === 'ArrowRight') {
+                    nextIndex = (index + 1) % tabBtns.length;
+                    tabBtns[nextIndex].focus();
+                    tabBtns[nextIndex].click(); // Optional: auto activate on focus
+                    e.preventDefault();
+                } else if (e.key === 'ArrowLeft') {
+                    nextIndex = (index - 1 + tabBtns.length) % tabBtns.length;
+                    tabBtns[nextIndex].focus();
+                    tabBtns[nextIndex].click();
+                    e.preventDefault();
+                }
             });
         });
 
@@ -631,25 +771,19 @@
             if (isRefreshing) return;
             isRefreshing = true;
 
-            // Animasi Icon
             refreshIcon.style.transition = 'transform 0.5s';
             refreshIcon.style.transform = 'rotate(360deg)';
-            
-            // Efek Loading di Main Content
             mainContent.classList.add('refreshing');
 
-            // Simulasi proses refresh (2 detik)
             setTimeout(() => {
                 isRefreshing = false;
                 refreshIcon.style.transition = 'none';
                 refreshIcon.style.transform = 'rotate(0deg)';
                 mainContent.classList.remove('refreshing');
-                
-                // Opsional: Tampilkan feedback halus atau reset scroll
             }, 1500);
         });
 
-        // --- 5. DELETE & UNDO LOGIC (Pengganti Native Confirm) ---
+        // --- 5. DELETE & UNDO LOGIC ---
         let deletedElement = null;
         let deletedParent = null;
         let deletedNextSibling = null;
@@ -660,12 +794,12 @@
             const card = document.getElementById(cardId);
             if (!card) return;
 
-            // Simpan referensi untuk undo
+            // Simpan referensi
             deletedElement = card;
             deletedParent = card.parentNode;
             deletedNextSibling = card.nextSibling;
 
-            // Animasi hapus visual
+            // Animasi hapus
             card.style.transform = 'scale(0.9) translateY(20px)';
             card.style.opacity = '0';
             card.style.transition = 'all 0.3s ease';
@@ -679,7 +813,6 @@
         function showUndoToast() {
             undoToast.classList.add('show');
             
-            // Otomatis hilangkan toast setelah 4 detik jika tidak di-undo
             clearTimeout(undoTimeout);
             undoTimeout = setTimeout(() => {
                 hideUndoToast();
@@ -693,27 +826,27 @@
 
         function handleUndo() {
             if (deletedElement && deletedParent) {
-                // Masukkan kembali elemen ke posisi semula
                 if (deletedNextSibling) {
                     deletedParent.insertBefore(deletedElement, deletedNextSibling);
                 } else {
                     deletedParent.appendChild(deletedElement);
                 }
 
-                // Reset animasi/ style
-                // Gunakan requestAnimationFrame agar transisi CSS berjalan
                 requestAnimationFrame(() => {
                     deletedElement.style.transform = 'scale(1) translateY(0)';
                     deletedElement.style.opacity = '1';
                 });
 
                 hideUndoToast();
+                
+                // Set fokus kembali ke elemen yang dipulihkan (opsional)
+                deletedElement.focus();
+                
                 deletedElement = null;
             }
         }
 
         function permanentlyDelete() {
-            // Logika pembersihan data permanen jika ada (misal: localStorage/API)
             console.log("Item dihapus permanen.");
             deletedElement = null;
         }
@@ -722,9 +855,13 @@
         const navItems = document.querySelectorAll('.bottom-menu .nav-item');
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
-                e.preventDefault(); // Mencegah reload halaman
-                navItems.forEach(nav => nav.classList.remove('active'));
+                e.preventDefault();
+                navItems.forEach(nav => {
+                    nav.classList.remove('active');
+                    nav.removeAttribute('aria-current');
+                });
                 item.classList.add('active');
+                item.setAttribute('aria-current', 'page');
             });
         });
 
