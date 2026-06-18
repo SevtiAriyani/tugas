@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile UX Task App</title>
+    <meta name="description" content="Aplikasi Mobile UX dengan Drawer, Tabs, Bottom Nav, dan Card Interaktif">
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary-color: #4f46e5; /* Indigo 600 */
+            --primary-light: #e0e7ff;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --header-height: 60px;
+            --bottom-nav-height: 65px;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Mencegah scroll body, scroll di dalam main saja */
+        }
+
+        /* --- UTILITIES --- */
+        .hidden { display: none !important; }
+        .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        button { cursor: pointer; border: none; background: none; font-family: inherit; }
+
+        /* --- HEADER & TOP APPS MENU --- */
+        header {
+            background-color: var(--surface-color);
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+            position: relative;
+        }
+
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Top Apps Submenu (Dropdown) */
+        .top-apps-menu {
+            position: absolute;
+            top: var(--header-height);
+            right: 0;
+            background: var(--surface-color);
+            width: 100%;
+            box-shadow: var(--shadow-md);
+            padding: 16px;
+            transform-origin: top;
+            transform: scaleY(0);
+            transition: transform var(--transition-speed) ease;
+            z-index: 9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .top-apps-menu.active {
+            transform: scaleY(1);
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            text-align: center;
+        }
+
+        .app-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .app-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: calc(var(--bottom-nav-height) + 20px);
+            scroll-behavior: smooth;
+        }
+
+        /* Refresh Animation State */
+        main.refreshing .card-item {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* --- TABS BAR --- */
+        .tabs-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            /* Hide scrollbar */
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: var(--surface-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* --- CARDS & MOVEOVER ANIMATION --- */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        /* Horizontal Scroll Container for Moveover Animation */
+        .moveover-container {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 4px 4px 20px 4px; /* Bottom padding for shadow */
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+        }
+        .moveover-container::-webkit-scrollbar { display: none; }
+
+        .card {
+            flex: 0 0 85%; /* Lebar card untuk memicu scroll */
+            max-width: 320px;
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            scroll-snap-align: center;
+            border: 1px solid #f1f5f9;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .card-tag {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 50%;
+            color: var(--text-secondary);
+            transition: background 0.2s;
+        }
+        .btn-icon:hover { background-color: #f1f5f9; }
+        .btn-icon.delete { color: var(--danger-color); }
+        .btn-icon.delete:hover { background-color: #fee2e2; }
+
+        /* --- BOTTOM MENU --- */
+        .bottom-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--bottom-nav-height);
+            background: var(--surface-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            padding: 8px 16px;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        /* --- BURGER MENU (DRAWER) --- */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-speed);
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background: var(--surface-color);
+            z-index: 31;
+            transform: translateX(-100%);
+            transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer.open + .drawer-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .drawer-nav {
+            padding: 20px 0;
+            flex: 1;
+        }
+
+        .drawer-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .drawer-link:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* --- UNDO TOAST (No Native Alert) --- */
+        .undo-toast {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 16px);
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            z-index: 50;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 90%;
+            max-width: 400px;
+            justify-content: space-between;
+        }
+
+        .undo-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .btn-undo {
+            color: var(--success-color);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* --- ACCESSIBILITY FOCUS --- */
+        *:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="header-left">
+            <!-- Burger Menu Trigger -->
+            <button class="btn-icon" id="burgerBtn" aria-label="Buka Menu">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <span class="app-title">TaskFlow</span>
+        </div>
+        
+        <div class="header-right">
+            <!-- Top Apps Trigger -->
+            <button class="btn-icon" id="appsMenuBtn" aria-label="Menu Aplikasi">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </button>
+            <!-- Refresh Action -->
+            <button class="btn-icon" id="refreshBtn" aria-label="Refresh Halaman">
+                <svg class="icon" id="refreshIcon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- TOP APPS SUBMENU -->
+    <nav class="top-apps-menu" id="topAppsMenu" aria-label="Menu Aplikasi Cepat">
+        <div class="apps-grid">
+            <a href="#" class="app-item" onclick="event.preventDefault()">
+                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
+                <span>File</span>
+            </a>
+            <a href="#" class="app-item" onclick="event.preventDefault()">
+                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <span>Waktu</span>
+            </a>
+            <a href="#" class="app-item" onclick="event.preventDefault()">
+                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+                <span>Chat</span>
+            </a>
+            <a href="#" class="app-item" onclick="event.preventDefault()">
+                <div class="app-icon-wrapper"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                <span>Jadwal</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="mainContent">
+        
+        <!-- TABS BAR -->
+        <nav class="tabs-container" aria-label="Kategori Tugas">
+            <button class="tab-btn active">Semua</button>
+            <button class="tab-btn">Desain</button>
+            <button class="tab-btn">Pengembangan</button>
+            <button class="tab-btn">Pemasaran</button>
+            <button class="tab-btn">Pribadi</button>
+        </nav>
+
+        <!-- SECTION: CARDS (Horizontal Moveover) -->
+        <h2 class="section-title">Tugas Prioritas (Geser)</h2>
+        
+        <!-- Container ini menggunakan scroll-snap untuk animasi moveover yang halus -->
+        <section class="moveover-container" id="cardContainer">
+            
+            <!-- Card 1 -->
+            <article class="card" id="card-1">
+                <div class="card-header">
+                    <span class="card-tag">Desain UI</span>
+                    <div class="card-actions">
+                        <button class="btn-icon delete" onclick="handleDelete('card-1')" aria-label="Hapus Tugas">
+                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <h3 class="card-title">Revisi Wireframe</h3>
+                <p class="card-desc">Perbarui flow navigasi untuk drawer dan pastikan kontras warna sesuai standar aksesibilitas.</p>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#64748b;">
+                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Due: 2 Jam
+                </div>
+            </article>
+
+            <!-- Card 2 -->
+            <article class="card" id="card-2">
+                <div class="card-header">
+                    <span class="card-tag">Frontend</span>
+                    <div class="card-actions">
+                        <button class="btn-icon delete" onclick="handleDelete('card-2')" aria-label="Hapus Tugas">
+                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <h3 class="card-title">Integrasi Animasi</h3>
+                <p class="card-desc">Implementasikan animasi loading dan transisi halaman untuk pengalaman pengguna yang lebih mulus.</p>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#64748b;">
+                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Due: Besok
+                </div>
+            </article>
+
+            <!-- Card 3 -->
+            <article class="card" id="card-3">
+                <div class="card-header">
+                    <span class="card-tag">Pengujian</span>
+                    <div class="card-actions">
+                        <button class="btn-icon delete" onclick="handleDelete('card-3')" aria-label="Hapus Tugas">
+                            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <h3 class="card-title">Audit Lighthouse</h3>
+                <p class="card-desc">Pastikan skor Lighthouse di atas 90 untuk kategori Performance, Accessibility, dan Best Practices.</p>
+                <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#64748b;">
+                    <svg class="icon" style="width:16px; height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Due: 3 Hari
+                </div>
+            </article>
+
+        </section>
+
+        <br>
+        <h2 class="section-title">Statistik Cepat</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div style="background:white; padding:16px; border-radius:12px; box-shadow:var(--shadow-sm); text-align:center;">
+                <div style="font-size:2rem; font-weight:bold; color:var(--primary-color)">85%</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary)">Produktivitas</div>
+            </div>
+            <div style="background:white; padding:16px; border-radius:12px; box-shadow:var(--shadow-sm); text-align:center;">
+                <div style="font-size:2rem; font-weight:bold; color:var(--success-color)">12</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary)">Tugas Selesai</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- BOTTOM MENU -->
+    <nav class="bottom-menu" aria-label="Navigasi Utama">
+        <a href="#" class="nav-item active">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Beranda</span>
+        </a>
+        <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Cari</span>
+        </a>
+        <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>Favorit</span>
+        </a>
+        <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <!-- BURGER DRAWER -->
+    <aside class="drawer" id="drawer" aria-label="Menu Samping">
+        <div class="drawer-header">
+            TaskFlow
+            <button onclick="toggleDrawer()" style="margin-left:auto; color:inherit;">
+                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <nav class="drawer-nav">
+            <a href="#" class="drawer-link">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Dashboard
+            </a>
+            <a href="#" class="drawer-link">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Laporan
+            </a>
+            <a href="#" class="drawer-link">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Pengaturan
+            </a>
+        </nav>
+    </aside>
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+
+    <!-- UNDO TOAST (Pengganti Konfirmasi Delete) -->
+    <div class="undo-toast" id="undoToast">
+        <span style="font-size:0.9rem;">Item berhasil dihapus</span>
+        <button class="btn-undo" onclick="handleUndo()">BATALKAN</button>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. BURGER MENU (DRAWER) ---
+        const drawer = document.getElementById('drawer');
+        const burgerBtn = document.getElementById('burgerBtn');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        function toggleDrawer() {
+            drawer.classList.toggle('open');
+            // Aksesibilitas: Update aria attribute pada tombol burger
+            const isOpen = drawer.classList.contains('open');
+            burgerBtn.setAttribute('aria-expanded', isOpen);
+        }
+
+        burgerBtn.addEventListener('click', toggleDrawer);
+
+        // --- 2. TOP APPS MENU (SUBMENU) ---
+        const appsMenuBtn = document.getElementById('appsMenuBtn');
+        const topAppsMenu = document.getElementById('topAppsMenu');
+
+        appsMenuBtn.addEventListener('click', () => {
+            topAppsMenu.classList.toggle('active');
+        });
+
+        // Tutup menu jika klik di luar area menu
+        document.addEventListener('click', (e) => {
+            if (!appsMenuBtn.contains(e.target) && !topAppsMenu.contains(e.target)) {
+                topAppsMenu.classList.remove('active');
+            }
+        });
+
+        // --- 3. TABS BAR ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Hapus kelas active dari semua tombol
+                tabBtns.forEach(b => b.classList.remove('active'));
+                // Tambahkan kelas active ke tombol yang diklik
+                btn.classList.add('active');
+                
+                // (Opsional) Logika filter konten bisa ditambahkan di sini
+                // Simulasi feedback visual
+                const container = document.querySelector('.moveover-container');
+                container.style.opacity = '0.5';
+                setTimeout(() => container.style.opacity = '1', 200);
+            });
+        });
+
+        // --- 4. REFRESH ANIMATION ---
+        const refreshBtn = document.getElementById('refreshBtn');
+        const refreshIcon = document.getElementById('refreshIcon');
+        const mainContent = document.getElementById('mainContent');
+        let isRefreshing = false;
+
+        refreshBtn.addEventListener('click', () => {
+            if (isRefreshing) return;
+            isRefreshing = true;
+
+            // Animasi Icon
+            refreshIcon.style.transition = 'transform 0.5s';
+            refreshIcon.style.transform = 'rotate(360deg)';
+            
+            // Efek Loading di Main Content
+            mainContent.classList.add('refreshing');
+
+            // Simulasi proses refresh (2 detik)
+            setTimeout(() => {
+                isRefreshing = false;
+                refreshIcon.style.transition = 'none';
+                refreshIcon.style.transform = 'rotate(0deg)';
+                mainContent.classList.remove('refreshing');
+                
+                // Opsional: Tampilkan feedback halus atau reset scroll
+            }, 1500);
+        });
+
+        // --- 5. DELETE & UNDO LOGIC (Pengganti Native Confirm) ---
+        let deletedElement = null;
+        let deletedParent = null;
+        let deletedNextSibling = null;
+        const undoToast = document.getElementById('undoToast');
+        let undoTimeout;
+
+        function handleDelete(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            // Simpan referensi untuk undo
+            deletedElement = card;
+            deletedParent = card.parentNode;
+            deletedNextSibling = card.nextSibling;
+
+            // Animasi hapus visual
+            card.style.transform = 'scale(0.9) translateY(20px)';
+            card.style.opacity = '0';
+            card.style.transition = 'all 0.3s ease';
+
+            setTimeout(() => {
+                card.remove();
+                showUndoToast();
+            }, 300);
+        }
+
+        function showUndoToast() {
+            undoToast.classList.add('show');
+            
+            // Otomatis hilangkan toast setelah 4 detik jika tidak di-undo
+            clearTimeout(undoTimeout);
+            undoTimeout = setTimeout(() => {
+                hideUndoToast();
+                permanentlyDelete();
+            }, 4000);
+        }
+
+        function hideUndoToast() {
+            undoToast.classList.remove('show');
+        }
+
+        function handleUndo() {
+            if (deletedElement && deletedParent) {
+                // Masukkan kembali elemen ke posisi semula
+                if (deletedNextSibling) {
+                    deletedParent.insertBefore(deletedElement, deletedNextSibling);
+                } else {
+                    deletedParent.appendChild(deletedElement);
+                }
+
+                // Reset animasi/ style
+                // Gunakan requestAnimationFrame agar transisi CSS berjalan
+                requestAnimationFrame(() => {
+                    deletedElement.style.transform = 'scale(1) translateY(0)';
+                    deletedElement.style.opacity = '1';
+                });
+
+                hideUndoToast();
+                deletedElement = null;
+            }
+        }
+
+        function permanentlyDelete() {
+            // Logika pembersihan data permanen jika ada (misal: localStorage/API)
+            console.log("Item dihapus permanen.");
+            deletedElement = null;
+        }
+
+        // --- BOTTOM MENU ACTIVE STATE ---
+        const navItems = document.querySelectorAll('.bottom-menu .nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault(); // Mencegah reload halaman
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+    </script>
+</body>
+</html>
